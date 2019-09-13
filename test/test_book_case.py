@@ -42,17 +42,34 @@ class BookTestCase(unittest.TestCase):
             res = self.client().post("api/books/add",data=json.dumps(sent),content_type="application/json")
             self.assertEqual(res.status_code, 200)
             self.assertEqual(res.json["author"], sent['author'])
+            self.assertEqual(sent['author'], Book.query.filter_by(author=sent["author"]).first().author)
 
     def test_api_edit_book(self):
         """Test Edit Book"""
         with self.app.app_context():
             sent = {"id": 1,"author":"Bjarne Stroustrup", "title":"The C++ Programming Language", "description":"The new C++11 standard allows programmers to express ideas more clearly, simply, and directly, and to write faster, more efficient code."}
-            res = self.client().post("api/books/edit", data=json.dumps(sent),content_type="application/json")
+            res = self.client().put("api/books/edit/{}".format(sent["id"]), data=json.dumps(sent),content_type="application/json")
             self.assertEqual(res.status_code, 200)
-            self.assertEqual(res.json['author'], sent['author'])
+            self.assertEqual(res.json["author"], sent["author"])
+            self.assertEqual(sent['author'], Book.query.filter_by(id=sent["id"]).first().author)
 
     def test_api_delete_book(self):
-        pass
+        """Test delete Book"""
+        with self.app.app_context():
+            sent = {"id":1}
+            res  =  self.client().delete("api/books/delete/{}".format(sent["id"]),content_type="application/json")
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.json["id"], sent["id"])
+            self.assertIsNone(Book.query.get(sent["id"]))
+
+    def test_api_get_individual_book(self):
+        """Test get individual Book"""
+        with self.app.app_context():
+            sent = {"id":2}
+            res  =  self.client().get("api/books/{}".format(sent["id"]),content_type="application/json")
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.json["id"], sent["id"])
+
 
 if __name__ == "__main__":
     unittest.main()
